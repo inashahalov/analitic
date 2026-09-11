@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>SCD1 vs SCD2 vs SCD3 — интерактивное сравнение</title>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; max-width: 640px; margin: 40px auto; padding: 0 16px; color: #2c2c2a; }
+  h1 { font-size: 20px; font-weight: 600; }
+  button { padding: 8px 16px; border: 1px solid #b4b2a9; border-radius: 6px; background: #fff; cursor: pointer; font-size: 14px; margin-right: 8px; }
+  button.active { background: #F1EFE8; border-color: #5F5E5A; font-weight: 600; }
+  table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 12px; }
+  th { text-align: left; padding: 6px 10px; border-bottom: 1px solid #5F5E5A; color: #5F5E5A; font-weight: 600; }
+  td { padding: 6px 10px; border-bottom: 1px solid #d3d1c7; font-family: monospace; }
+  #desc { font-size: 13px; color: #5F5E5A; margin-top: 14px; }
+</style>
+</head>
+<body>
+<h1>SCD1 / SCD2 / SCD3 — один и тот же переезд клиента</h1>
+<p style="font-size:13px; color:#5F5E5A;">Клиент client_id=42 переехал из Москвы в Питер 01.09.2026. Смотри, как каждый вариант SCD отражает это в измерении.</p>
+
+<div>
+  <button id="btn1" onclick="setScd(1)">SCD1</button>
+  <button id="btn2" onclick="setScd(2)">SCD2</button>
+  <button id="btn3" onclick="setScd(3)">SCD3</button>
+</div>
+<div id="desc"></div>
+<div id="table"></div>
+
+<script>
+const data = {
+  1: {
+    desc: "Перезапись без истории. Старое значение города теряется навсегда.",
+    cols: ["client_sk", "client_id", "city"],
+    rows: [["42","42","Питер"]]
+  },
+  2: {
+    desc: "Новая строка при каждом изменении, старая помечается неактуальной. Джойн с фактами — по client_sk, не по client_id.",
+    cols: ["client_sk", "client_id", "city", "valid_from", "valid_to", "is_current"],
+    rows: [
+      ["42","42","Москва","2020-01-01","2026-08-31","false"],
+      ["87","42","Питер","2026-09-01","NULL","true"]
+    ]
+  },
+  3: {
+    desc: "Только текущее и одно предыдущее значение, в отдельных колонках. Полной истории нет.",
+    cols: ["client_sk", "client_id", "city_current", "city_previous", "changed_at"],
+    rows: [["42","42","Питер","Москва","2026-09-01"]]
+  }
+};
+
+function setScd(n) {
+  [1,2,3].forEach(i => document.getElementById('btn'+i).classList.toggle('active', i===n));
+  document.getElementById('desc').textContent = data[n].desc;
+  const cols = data[n].cols, rows = data[n].rows;
+  let html = '<table><tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+  rows.forEach(r => html += '<tr>' + r.map(v => `<td>${v}</td>`).join('') + '</tr>');
+  html += '</table>';
+  document.getElementById('table').innerHTML = html;
+}
+setScd(1);
+</script>
+</body>
+</html>
